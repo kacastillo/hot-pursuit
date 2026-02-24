@@ -109,6 +109,16 @@ class Player {
             bounding_box(create_bounding_box(sprite, size))
         {}
 
+};
+
+class Enemy {
+    public:
+        Enemy(int starting_x, int starting_y, bn::size enemy_size) :
+            sprite(bn::sprite_items::square.create_sprite(starting_x, starting_y)),
+            size(enemy_size),
+            enemy_bounding_box(create_bounding_box(sprite, size))
+        {}
+};
 
         /**
          * Update the position and bounding box of the player based on d-pad movement.
