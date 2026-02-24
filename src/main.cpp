@@ -108,8 +108,7 @@ class Player {
             size(player_size),
             bounding_box(create_bounding_box(sprite, size))
         {}
-
-};
+}
 
 class Enemy {
     public:
@@ -118,7 +117,8 @@ class Enemy {
             size(enemy_size),
             enemy_bounding_box(create_bounding_box(enemy_sprite, size))
         {}
-};
+}
+
 
         /**
          * Update the position and bounding box of the player based on d-pad movement.
@@ -147,41 +147,41 @@ class Enemy {
         bn::size size; // The width and height of the sprite
         bn::rect bounding_box; // The rectangle around the sprite for checking collision
 
-        // create the enemy sprite. This will be moved to a constructor
-        bn::sprite_ptr enemy_sprite;
-        bn::rect enemy_bounding_box; // The rectangle around the enemy sprite for checking collision
-        bn::size enemy_size; // The width and height of the enemy sprite
 
-int main() {
-    bn::core::init();
+        int main() {
+            bn::core::init();
 
-    // Create a new score display
-    ScoreDisplay scoreDisplay = ScoreDisplay();
+            // Create a new score display
+            ScoreDisplay scoreDisplay = ScoreDisplay();
 
-    // Create a player and initialize it
-    // TODO: we will move the initialization logic to a constructor.
-    Player player = Player(31, 19, 3.5, PLAYER_SIZE);
-    // player.sprite.set_x(44);
-    // player.sprite.set_y(22);
-    // player.speed = 1.5;
-    // player.size = PLAYER_SIZE;
-    player.bounding_box = create_bounding_box(player.sprite, player.size);
+            // Create a player and initialize it
+            // TODO: we will move the initialization logic to a constructor.
+            Player player = Player(31, 19, 3.5, PLAYER_SIZE);
+            // player.sprite.set_x(44);
+            // player.sprite.set_y(22);
+            // player.speed = 1.5;
+            // player.size = PLAYER_SIZE;
+            player.bounding_box = create_bounding_box(player.sprite, player.size);
 
 
-    while(true) {
-        player.update();
+            Enemy enemy = Enemy(25, 21, 1.5, ENEMY_SIZE);
+            // bn::sprite_ptr enemy_sprite = bn::sprite_items::square.create_sprite(-30, 22);
+            // bn::rect enemy_bounding_box = create_bounding_box(enemy_sprite, ENEMY_SIZE);
 
-        // Reset the current score and player position if the player collides with enemy
-        if(enemy_bounding_box.intersects(player.bounding_box)) {
-            scoreDisplay.resetScore();
-            player.sprite.set_x(44);
-            player.sprite.set_y(22);
+            while(true) {
+                player.update();
+
+                // Reset the current score and player position if the player collides with enemy
+                if(enemy.bounding_box.intersects(player.bounding_box)) {
+                    scoreDisplay.resetScore();
+                    player.sprite.set_x(44);
+                    player.sprite.set_y(22);
+                }
+
+                // Update the scores and disaply them
+                scoreDisplay.update(); 
+                
+
+                bn::core::update();
+            }
         }
-
-        // Update the scores and disaply them
-        scoreDisplay.update(); 
-        
-
-        bn::core::update();
-    }
-}
