@@ -114,9 +114,9 @@ class Player {
 class Enemy {
     public:
         Enemy(int starting_x, int starting_y, bn::size enemy_size) :
-            sprite(bn::sprite_items::square.create_sprite(starting_x, starting_y)),
+            enemy_sprite(bn::sprite_items::square.create_sprite(starting_x, starting_y)),
             size(enemy_size),
-            enemy_bounding_box(create_bounding_box(sprite, size))
+            enemy_bounding_box(create_bounding_box(enemy_sprite, size))
         {}
 };
 
@@ -146,7 +146,11 @@ class Enemy {
         bn::fixed speed; // The speed of the player
         bn::size size; // The width and height of the sprite
         bn::rect bounding_box; // The rectangle around the sprite for checking collision
-};
+
+        // create the enemy sprite. This will be moved to a constructor
+        bn::sprite_ptr enemy_sprite;
+        bn::rect enemy_bounding_box; // The rectangle around the enemy sprite for checking collision
+        bn::size enemy_size; // The width and height of the enemy sprite
 
 int main() {
     bn::core::init();
@@ -163,8 +167,6 @@ int main() {
     // player.size = PLAYER_SIZE;
     player.bounding_box = create_bounding_box(player.sprite, player.size);
 
-    bn::sprite_ptr enemy_sprite = bn::sprite_items::square.create_sprite(-30, 22);
-    bn::rect enemy_bounding_box = create_bounding_box(enemy_sprite, ENEMY_SIZE);
 
     while(true) {
         player.update();
