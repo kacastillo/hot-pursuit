@@ -6,6 +6,7 @@
 #include <bn_string.h>
 #include <bn_sprite_ptr.h>
 #include <bn_sprite_text_generator.h>
+#include <bn_random.h>
 
 #include "common_fixed_8x16_font.h"
 #include "bn_sprite_items_dot.h"
@@ -110,6 +111,8 @@ class Player {
         {}
         /**
          * Update the position and bounding box of the player based on d-pad movement.
+         * 
+         * Also prevents the player from moving off the screen.
          */
         void update() {
             if(bn::keypad::right_held()) {
@@ -124,6 +127,21 @@ class Player {
             }
             if(bn::keypad::up_held()) {
                 sprite.set_y(sprite.y() - speed);
+            }
+            // prevents player from moving off the screen
+            if(sprite.x() < MIN_X + size.width() / 2) {
+                sprite.set_x(MIN_X + size.width() / 2);
+            }
+            if(sprite.x() > MAX_X - size.width() / 2) {
+                sprite.set_x(MAX_X - size.width() / 2);
+            }
+
+            // prevents player from moving off the screen
+            if(sprite.y() < MIN_Y + size.height() / 2) {
+                sprite.set_y(MIN_Y + size.height() / 2);
+            }
+            if(sprite.y() > MAX_Y - size.height() / 2) {
+                sprite.set_y(MAX_Y - size.height() / 2);
             }
 
             bounding_box = create_bounding_box(sprite, size);
@@ -145,13 +163,49 @@ class Player {
             size(enemy_size),
             bounding_box(create_bounding_box(enemy_sprite, size))
          {}
+
+        /** moves enemy towards the player. if enemy catches player, enemy jumps to random spot */
+        void update(Player& player) {
+            bn::fixed dx = player.sprite.x() - enemy_sprite.x();
+            bn::fixed dy = player.sprite.y() - enemy_sprite.y();
+
+            // allows enemy to follow player
+            if(dx > 0) {
+                enemy_sprite.set_x(enemy_sprite.x() + speed);
+            } else if(dx < 0) {
+                enemy_sprite.set_x(enemy_sprite.x() - speed);
+            }
+
+            if(dy > 0) {
+                enemy_sprite.set_y(enemy_sprite.y() + speed);
+            } else if(dy < 0) {
+                enemy_sprite.set_y(enemy_sprite.y() - speed);
+            }
+
+            // updates the bounding box to match the new enemy position
+            bounding_box = create_bounding_box(enemy_sprite, size);
+
+            // when the enemy catches the player, jump to a random spot on screen
+            if(bounding_box.intersects(player.bounding_box)) {
+
+             // Pick a random position within the screen bounds (with some padding for sprite size)
+                int rand_x = rng.get_int(MIN_X + size.width(), MAX_X - size.width());
+                int rand_y = rng.get_int(MIN_Y + size.height(), MAX_Y - size.height());
+                enemy_sprite.set_x(rand_x);
+                enemy_sprite.set_y(rand_y);
+                bounding_box = create_bounding_box(enemy_sprite, size);
+            }
+        }
+
          // create the sprite. This will be moved to a constructor
         bn::sprite_ptr enemy_sprite;
         bn::fixed speed; // The speed of the enemy
         bn::size size; // The width and height of the enemy sprite
         bn::rect bounding_box; // The rectangle around the enemy sprite for checking collision
-};
 
+        // random number generator for changing the spot  when the enemy catches the player
+        bn::random rng; 
+    };
         
 
 
@@ -169,18 +223,27 @@ class Player {
             // player.speed = 1.5;
             // player.size = PLAYER_SIZE;
 
-            Enemy enemy = Enemy(25, 21, 1.5, ENEMY_SIZE);
             // bn::sprite_ptr enemy_sprite = bn::sprite_items::square.create_sprite(-30, 22);
             // bn::rect enemy_bounding_box = create_bounding_box(enemy_sprite, ENEMY_SIZE);
 
+            // Create a vector of enemies with different starting positions and speeds
+            bn::vector<Enemy, 4> enemies; //4 enemies 
+            enemies.push_back(Enemy(25, 21, 1.5, ENEMY_SIZE));
+            enemies.push_back(Enemy(-50, -30, 1.0, ENEMY_SIZE));
+            enemies.push_back(Enemy(60, -40, 2.0, ENEMY_SIZE));
+            enemies.push_back(Enemy(-20, 50, 1.25, ENEMY_SIZE));
+
             while(true) {
                 player.update();
+                for(Enemy& enemy : enemies) {
+                    enemy.update(player);
 
-                // Reset the current score and player position if the player collides with enemy
-                if(enemy.bounding_box.intersects(player.bounding_box)) {
-                    scoreDisplay.resetScore();
-                    player.sprite.set_x(44);
-                    player.sprite.set_y(22);
+                    // Reset the current score and player position if this enemy collides with the player
+                    if(enemy.bounding_box.intersects(player.bounding_box)) {
+                        scoreDisplay.resetScore();
+                        player.sprite.set_x(44);
+                        player.sprite.set_y(22);
+                    }
                 }
 
                 // Update the scores and disaply them
