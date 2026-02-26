@@ -229,7 +229,7 @@ class Player {
             // Create a vector of enemies with different starting positions and speeds
             bn::vector<Enemy, 4> enemies; //4 enemies 
             enemies.push_back(Enemy(25, 21, 1.5, ENEMY_SIZE));
-            enemies.push_back(Enemy(-50, -30, 1.0, ENEMY_SIZE));
+            enemies.push_back(Enemy(-25, -30, 1.0, ENEMY_SIZE));
             enemies.push_back(Enemy(60, -40, 2.0, ENEMY_SIZE));
             enemies.push_back(Enemy(-20, 50, 1.25, ENEMY_SIZE));
 
