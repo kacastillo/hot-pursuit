@@ -43,6 +43,7 @@ static constexpr int POWERUP_DURATION = 300; // 5 seconds
 // How often a powerup spawns (in frames)
 static constexpr int POWERUP_SPAWN_INTERVAL = 600; // 10 seconds
 static constexpr int ENEMY_SPAWN_INTERVAL = 600; // 15 seconds
+int enemy_jump_timer = 0; // Timer for how long an enemy should jump to a random spot
 // Enemy separation distance — if closer than this, push apart
 static constexpr int ENEMY_SEPARATION = 14;
 
@@ -263,17 +264,6 @@ class Player {
 
             // updates the bounding box to match the new enemy position
             bounding_box = create_bounding_box(enemy_sprite, size);
-
-            // when the enemy catches the player, jump to a random spot on screen
-            if(bounding_box.intersects(player.bounding_box)) {
-
-             // Pick a random position within the screen bounds (with some padding for sprite size)
-                int rand_x = rng.get_int(MIN_X + size.width(), MAX_X - size.width());
-                int rand_y = rng.get_int(MIN_Y + size.height(), MAX_Y - size.height());
-                enemy_sprite.set_x(rand_x);
-                enemy_sprite.set_y(rand_y);
-                bounding_box = create_bounding_box(enemy_sprite, size);
-            }
         }
 
         /**
@@ -321,20 +311,8 @@ class Player {
 
         int main() {
             bn::core::init();
-
-            // Create a new score display
             ScoreDisplay scoreDisplay = ScoreDisplay();
-
-            // Create a player and initialize it
-            // TODO: we will move the initialization logic to a constructor.
             Player player = Player(31, 19, 3.5, PLAYER_SIZE);
-            // player.sprite.set_x(44);
-            // player.sprite.set_y(22);
-            // player.speed = 1.5;
-            // player.size = PLAYER_SIZE;
-
-            // bn::sprite_ptr enemy_sprite = bn::sprite_items::square.create_sprite(-30, 22);
-            // bn::rect enemy_bounding_box = create_bounding_box(enemy_sprite, ENEMY_SIZE);
 
             // Create a vector of enemies with different starting positions and speeds.
             // Later enemies are faster than earlier ones.
@@ -351,6 +329,15 @@ class Player {
 
             while(true) {
                 player.update();
+            // Update enemies and check for collisions with player
+                enemy_jump_timer--;
+                if(enemy_jump_timer <= 0) {
+                    enemy_jump_timer = 360;
+                    int jx = rng.get_int(MIN_X + 16, MAX_X - 16);
+                    int jy = rng.get_int(MIN_Y + 16, MAX_Y - 16);
+                    enemies[0].enemy_sprite.set_x(jx);
+                    enemies[0].enemy_sprite.set_y(jy);
+                }
                 enemy_spawn_timer--;
                 if(enemy_spawn_timer <= 0 && enemies.size() < enemies.max_size()) {
                     enemy_spawn_timer = ENEMY_SPAWN_INTERVAL;
