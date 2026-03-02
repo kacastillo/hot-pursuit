@@ -9,7 +9,9 @@
 #include <bn_random.h>
 
 #include "common_fixed_8x16_font.h"
-#include "bn_sprite_items_dot.h"
+#include "bn_sprite_items_cat.h"
+#include "bn_sprite_items_rat.h"
+
 #include "bn_sprite_items_square.h"
 
 // Width and height of the the player bounding box
@@ -104,7 +106,7 @@ class ScoreDisplay {
 class Player {
     public:
         Player(int starting_x, int starting_y, bn::fixed player_speed, bn::size player_size) :
-            sprite(bn::sprite_items::dot.create_sprite(starting_x, starting_y)),
+            sprite(bn::sprite_items::rat.create_sprite(starting_x, starting_y)),
             speed(player_speed), 
             size(player_size),
             bounding_box(create_bounding_box(sprite, size))
@@ -158,7 +160,7 @@ class Player {
         class Enemy {
     public:
         Enemy(int starting_x, int starting_y, bn::fixed enemy_speed, bn::size enemy_size) :
-            enemy_sprite(bn::sprite_items::square.create_sprite(starting_x, starting_y)),
+            enemy_sprite(bn::sprite_items::cat.create_sprite(starting_x, starting_y)),
             speed(enemy_speed),
             size(enemy_size),
             bounding_box(create_bounding_box(enemy_sprite, size))
