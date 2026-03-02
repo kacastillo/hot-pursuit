@@ -7,6 +7,9 @@
 #include <bn_sprite_ptr.h>
 #include <bn_sprite_text_generator.h>
 #include <bn_random.h>
+#include <bn_sound_items.h>
+#include <bn_music_items.h>
+#include <bn_math.h>
 
 #include "common_fixed_8x16_font.h"
 #include "bn_sprite_items_cat.h"
@@ -17,6 +20,7 @@
 // Width and height of the the player bounding box
 static constexpr bn::size PLAYER_SIZE = {8, 8};
 static constexpr bn::size ENEMY_SIZE = {8, 8};
+static constexpr bn::size POWERUP_SIZE = {8, 8};
 
 static constexpr int MIN_Y = -bn::display::height() / 2;
 static constexpr int MAX_Y = bn::display::height() / 2;
@@ -33,6 +37,13 @@ static constexpr int SCORE_Y = -70;
 // High score location
 static constexpr int HIGH_SCORE_X = -70;
 static constexpr int HIGH_SCORE_Y = -70;
+
+// Powerup duration in frames (60 frames = ~1 second)
+static constexpr int POWERUP_DURATION = 300; // 5 seconds
+// How often a powerup spawns (in frames)
+static constexpr int POWERUP_SPAWN_INTERVAL = 600; // 10 seconds
+// Enemy separation distance — if closer than this, push apart
+static constexpr int ENEMY_SEPARATION = 14;
 
 /**
  * Creates a rectangle centered at a sprite's location with a given size.
@@ -103,13 +114,48 @@ class ScoreDisplay {
         bn::sprite_text_generator text_generator; // Text generator for scores
 };
 
+// Powerup types
+enum class PowerupType {
+    SPEED_BOOST,
+    INVINCIBILITY
+};
+
+/**
+ * A collectible powerup that temporarily grants the player either a speed boost or invincibility.
+ * Spawns at a fixed position and is removed when collected by the player.
+ */
+class Powerup {
+public:
+    Powerup(int x, int y, PowerupType type, bn::size size) :
+        sprite(bn::sprite_items::square.create_sprite(x, y)),
+        active(true),
+        powerup_type(type),
+        size(size),
+        bounding_box(create_bounding_box(sprite, size))
+    {}
+
+    void deactivate() {
+        active = false;
+    }
+
+    bool active; // Whether this powerup is still collectible
+    PowerupType powerup_type; // Which effect this powerup grants
+    bn::sprite_ptr sprite;
+    bn::size size; // The width and height of the sprite
+    bn::rect bounding_box; // The rectangle around the sprite for checking collision
+};
+
 class Player {
     public:
         Player(int starting_x, int starting_y, bn::fixed player_speed, bn::size player_size) :
             sprite(bn::sprite_items::rat.create_sprite(starting_x, starting_y)),
+            base_speed(player_speed),
             speed(player_speed), 
             size(player_size),
-            bounding_box(create_bounding_box(sprite, size))
+            bounding_box(create_bounding_box(sprite, size)),
+            powerup_timer(0),
+            has_powerup(false),
+            is_invincible(false)
         {}
         /**
          * Update the position and bounding box of the player based on d-pad movement.
@@ -117,6 +163,16 @@ class Player {
          * Also prevents the player from moving off the screen.
          */
         void update() {
+            // Handle active powerup countdown
+            if(has_powerup) {
+                powerup_timer--;
+                if(powerup_timer <= 0) {
+                    has_powerup = false;
+                    is_invincible = false;
+                    speed = base_speed; // restore normal speed when powerup expires
+                }
+            }
+
             if(bn::keypad::right_held()) {
                 sprite.set_x(sprite.x() + speed);
             }
@@ -150,11 +206,31 @@ class Player {
 
         
         }
+
+        /**
+         * Apply a powerup effect to the player.
+         */
+        void applyPowerup(PowerupType type) {
+            has_powerup = true;
+            powerup_timer = POWERUP_DURATION;
+            if(type == PowerupType::SPEED_BOOST) {
+                speed = base_speed * 2; // double movement speed
+                is_invincible = false;
+            } else if(type == PowerupType::INVINCIBILITY) {
+                is_invincible = true; // immune to enemy collision
+                speed = base_speed;
+            }
+        }
+
                 // Create the sprite. This will be moved to a constructor
         bn::sprite_ptr sprite;
-        bn::fixed speed; // The speed of the player
+        bn::fixed base_speed; // The normal speed of the player (before any powerup)
+        bn::fixed speed; // The current speed of the player
         bn::size size; // The width and height of the sprite
         bn::rect bounding_box; // The rectangle around the sprite for checking collision
+        int powerup_timer; // Frames remaining on the active powerup
+        bool has_powerup; // Whether a powerup is currently active
+        bool is_invincible; // Whether the player is currently invincible
     };
 
         class Enemy {
@@ -199,6 +275,37 @@ class Player {
             }
         }
 
+        /**
+         * Push this enemy away from another enemy if they are overlapping.
+         * Computes a repulsion vector based on the distance between the two enemies
+         * and moves both apart by half the overlap, keeping enemies spread out.
+         */
+        void separateFrom(Enemy& other) {
+            bn::fixed dx = enemy_sprite.x() - other.enemy_sprite.x();
+            bn::fixed dy = enemy_sprite.y() - other.enemy_sprite.y();
+
+            // Compute distance squared to check if enemies are too close
+            bn::fixed dist_sq = dx * dx + dy * dy;
+            bn::fixed sep = bn::fixed(ENEMY_SEPARATION);
+
+            if(dist_sq < sep * sep && dist_sq > 0) {
+                // Normalize the direction vector and push both enemies apart equally
+                bn::fixed dist = bn::sqrt(dist_sq);
+                bn::fixed push = (sep - dist) / 2;
+                bn::fixed nx = dx / dist;
+                bn::fixed ny = dy / dist;
+
+                enemy_sprite.set_x(enemy_sprite.x() + nx * push);
+                enemy_sprite.set_y(enemy_sprite.y() + ny * push);
+                other.enemy_sprite.set_x(other.enemy_sprite.x() - nx * push);
+                other.enemy_sprite.set_y(other.enemy_sprite.y() - ny * push);
+
+                // updates the bounding boxes to match the new positions
+                bounding_box = create_bounding_box(enemy_sprite, size);
+                other.bounding_box = create_bounding_box(other.enemy_sprite, other.size);
+            }
+        }
+
          // create the sprite. This will be moved to a constructor
         bn::sprite_ptr enemy_sprite;
         bn::fixed speed; // The speed of the enemy
@@ -228,12 +335,18 @@ class Player {
             // bn::sprite_ptr enemy_sprite = bn::sprite_items::square.create_sprite(-30, 22);
             // bn::rect enemy_bounding_box = create_bounding_box(enemy_sprite, ENEMY_SIZE);
 
-            // Create a vector of enemies with different starting positions and speeds
+            // Create a vector of enemies with different starting positions and speeds.
+            // Later enemies are faster than earlier ones.
             bn::vector<Enemy, 4> enemies; //4 enemies 
-            enemies.push_back(Enemy(25, 21, 1.5, ENEMY_SIZE));
-            enemies.push_back(Enemy(-25, -30, 1.0, ENEMY_SIZE));
-            enemies.push_back(Enemy(60, -40, 2.0, ENEMY_SIZE));
-            enemies.push_back(Enemy(-20, 50, 1.25, ENEMY_SIZE));
+            enemies.push_back(Enemy( 25,  21, bn::fixed(1.0),  ENEMY_SIZE));
+            enemies.push_back(Enemy(-25, -30, bn::fixed(1.5),  ENEMY_SIZE));
+            enemies.push_back(Enemy( 60, -40, bn::fixed(2.0),  ENEMY_SIZE));
+            enemies.push_back(Enemy(-20,  50, bn::fixed(2.75), ENEMY_SIZE));
+
+            // Powerup management
+            bn::vector<Powerup, 2> powerups; // at most 2 active powerups at once
+            int powerup_spawn_timer = POWERUP_SPAWN_INTERVAL;
+            bn::random rng; // random number generator for powerup spawn positions and types
 
             while(true) {
                 player.update();
@@ -241,10 +354,18 @@ class Player {
                     enemy.update(player);
 
                     // Reset the current score and player position if this enemy collides with the player
-                    if(enemy.bounding_box.intersects(player.bounding_box)) {
+                    if(enemy.bounding_box.intersects(player.bounding_box) && !player.is_invincible) {
                         scoreDisplay.resetScore();
                         player.sprite.set_x(44);
                         player.sprite.set_y(22);
+                        // bn::sound_items::hit.play(); 
+                    }
+                }
+
+                // Separate enemies from each other (no overlapping)
+                for(int i = 0; i < (int)enemies.size(); i++) {
+                    for(int j = i + 1; j < (int)enemies.size(); j++) {
+                        enemies[i].separateFrom(enemies[j]);
                     }
                 }
 
