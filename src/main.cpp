@@ -15,7 +15,7 @@
 #include "bn_sprite_items_cat.h"
 #include "bn_sprite_items_rat.h"
 
-#include "bn_sprite_items_square.h"
+#include "bn_sprite_items_cheese.h"
 
 // Width and height of the the player bounding box
 static constexpr bn::size PLAYER_SIZE = {8, 8};
@@ -43,7 +43,6 @@ static constexpr int POWERUP_DURATION = 300; // 5 seconds
 // How often a powerup spawns (in frames)
 static constexpr int POWERUP_SPAWN_INTERVAL = 600; // 10 seconds
 static constexpr int ENEMY_SPAWN_INTERVAL = 600; // 15 seconds
-int enemy_jump_timer = 0; // Timer for how long an enemy should jump to a random spot
 // Enemy separation distance — if closer than this, push apart
 static constexpr int ENEMY_SEPARATION = 14;
 
@@ -129,7 +128,7 @@ enum class PowerupType {
 class Powerup {
 public:
     Powerup(int x, int y, PowerupType type, bn::size size) :
-        sprite(bn::sprite_items::square.create_sprite(x, y)),
+        sprite(bn::sprite_items::cheese.create_sprite(x, y)),
         active(true),
         powerup_type(type),
         size(size),
@@ -320,6 +319,7 @@ class Player {
             enemies.push_back(Enemy( 25,  21, bn::fixed(1.0),  ENEMY_SIZE));
 
             int enemy_spawn_timer = ENEMY_SPAWN_INTERVAL; // Timer for spawning new enemies
+            int enemy_jump_timer = 360;
             bn::fixed enemy_speed[4] = {bn::fixed(1.0), bn::fixed(1.5), bn::fixed(2.0), bn::fixed(2.75)}; // Speeds for each enemy slot
 
             // Powerup management
