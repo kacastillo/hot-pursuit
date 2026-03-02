@@ -316,11 +316,11 @@ class Player {
             // Create a vector of enemies with different starting positions and speeds.
             // Later enemies are faster than earlier ones.
             bn::vector<Enemy, 4> enemies; //4 enemies 
-            enemies.push_back(Enemy( 25,  21, bn::fixed(1.0),  ENEMY_SIZE));
+            enemies.push_back(Enemy( 25,  21, bn::fixed(.5),  ENEMY_SIZE));
 
             int enemy_spawn_timer = ENEMY_SPAWN_INTERVAL; // Timer for spawning new enemies
             int enemy_jump_timer = 360;
-            bn::fixed enemy_speed[4] = {bn::fixed(1.0), bn::fixed(1.5), bn::fixed(2.0), bn::fixed(2.75)}; // Speeds for each enemy slot
+            bn::fixed enemy_speed[4] = {bn::fixed(.75), bn::fixed(1.0), bn::fixed(1.5), bn::fixed(1.75)}; // Speeds for each enemy slot
 
             // Powerup management
             bn::vector<Powerup, 2> powerups; // at most 2 active powerups at once
