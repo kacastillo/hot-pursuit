@@ -7,8 +7,8 @@
 #include <bn_sprite_ptr.h>
 #include <bn_sprite_text_generator.h>
 #include <bn_random.h>
-#include <bn_sound_items.h>
-#include <bn_music_items.h>
+// #include <bn_sound_items.h>
+// #include <bn_music_items.h>
 #include <bn_math.h>
 
 #include "common_fixed_8x16_font.h"
@@ -366,6 +366,27 @@ class Player {
                 for(int i = 0; i < (int)enemies.size(); i++) {
                     for(int j = i + 1; j < (int)enemies.size(); j++) {
                         enemies[i].separateFrom(enemies[j]);
+                    }
+                }
+
+                // Spawn a new powerup randomly
+                powerup_spawn_timer--;
+                if(powerup_spawn_timer <= 0 && powerups.size() < powerups.max_size()) {
+                    powerup_spawn_timer = POWERUP_SPAWN_INTERVAL;
+                    int px = rng.get_int(MIN_X + 16, MAX_X - 16);
+                    int py = rng.get_int(MIN_Y + 16, MAX_Y - 16);
+
+                    // random choose between speed boost and invincibility
+                    PowerupType type = (rng.get_int(2) == 0) ? PowerupType::SPEED_BOOST : PowerupType::INVINCIBILITY;
+                    powerups.push_back(Powerup(px, py, type, POWERUP_SIZE));
+                }
+                for(int i = powerups.size() - 1; i >= 0; i--) {
+                    if(!powerups[i].active) continue;
+                    powerups[i].bounding_box = create_bounding_box(powerups[i].sprite, powerups[i].size);
+                    if(powerups[i].bounding_box.intersects(player.bounding_box)) {
+                        player.applyPowerup(powerups[i].powerup_type);
+                        powerups[i].deactivate();
+                        powerups.erase(powerups.begin() + i);
                     }
                 }
 
