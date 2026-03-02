@@ -16,6 +16,7 @@
 #include "bn_sprite_items_rat.h"
 
 #include "bn_sprite_items_cheese.h"
+#include "bn_sprite_items_home.h"
 
 // Width and height of the the player bounding box
 static constexpr bn::size PLAYER_SIZE = {8, 8};
@@ -327,8 +328,17 @@ class Player {
             int powerup_spawn_timer = POWERUP_SPAWN_INTERVAL;
             bn::random rng; // random number generator for powerup spawn positions and types
 
+            bn::sprite_ptr home_sprite = bn::sprite_items::home.create_sprite(80, 0); 
+
             while(true) {
                 player.update();
+
+                bn::rect home_box = create_bounding_box(home_sprite, bn::size(16, 16));
+                if (player.bounding_box.intersects(home_box)) {
+                    player.is_invincible = true; 
+                } else {
+                    player.is_invincible = false; 
+                }
             // Update enemies and check for collisions with player
                 enemy_jump_timer--;
                 if(enemy_jump_timer <= 0) {
