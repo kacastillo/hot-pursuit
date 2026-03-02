@@ -42,6 +42,7 @@ static constexpr int HIGH_SCORE_Y = -70;
 static constexpr int POWERUP_DURATION = 300; // 5 seconds
 // How often a powerup spawns (in frames)
 static constexpr int POWERUP_SPAWN_INTERVAL = 600; // 10 seconds
+static constexpr int ENEMY_SPAWN_INTERVAL = 600; // 15 seconds
 // Enemy separation distance — if closer than this, push apart
 static constexpr int ENEMY_SEPARATION = 14;
 
@@ -339,9 +340,9 @@ class Player {
             // Later enemies are faster than earlier ones.
             bn::vector<Enemy, 4> enemies; //4 enemies 
             enemies.push_back(Enemy( 25,  21, bn::fixed(1.0),  ENEMY_SIZE));
-            enemies.push_back(Enemy(-25, -30, bn::fixed(1.5),  ENEMY_SIZE));
-            enemies.push_back(Enemy( 60, -40, bn::fixed(2.0),  ENEMY_SIZE));
-            enemies.push_back(Enemy(-20,  50, bn::fixed(2.75), ENEMY_SIZE));
+
+            int enemy_spawn_timer = ENEMY_SPAWN_INTERVAL; // Timer for spawning new enemies
+            bn::fixed enemy_speed[4] = {bn::fixed(1.0), bn::fixed(1.5), bn::fixed(2.0), bn::fixed(2.75)}; // Speeds for each enemy slot
 
             // Powerup management
             bn::vector<Powerup, 2> powerups; // at most 2 active powerups at once
@@ -350,16 +351,26 @@ class Player {
 
             while(true) {
                 player.update();
+                enemy_spawn_timer--;
+                if(enemy_spawn_timer <= 0 && enemies.size() < enemies.max_size()) {
+                    enemy_spawn_timer = ENEMY_SPAWN_INTERVAL;
+                    // Spawn a new enemy in a random location with the next speed in the list
+                    int ex = rng.get_int(MIN_X + 16, MAX_X - 16);
+                    int ey = rng.get_int(MIN_Y + 16, MAX_Y - 16);
+                    enemies.push_back(Enemy(ex, ey, enemy_speed[enemies.size() - 1], ENEMY_SIZE));
+                }
                 for(Enemy& enemy : enemies) {
                     enemy.update(player);
-
-                    // Reset the current score and player position if this enemy collides with the player
-                    if(enemy.bounding_box.intersects(player.bounding_box) && !player.is_invincible) {
+                    if(!player.is_invincible && enemy.bounding_box.intersects(player.bounding_box)) {
                         scoreDisplay.resetScore();
                         player.sprite.set_x(44);
                         player.sprite.set_y(22);
-                        // bn::sound_items::hit.play(); 
+                        while(enemies.size() > 1) {
+                            enemies.pop_back(); // Remove all but the first enemy on player death   
                     }
+                    enemy_spawn_timer = ENEMY_SPAWN_INTERVAL; // Reset enemy spawn timer on player death
+                    break;
+                }
                 }
 
                 // Separate enemies from each other (no overlapping)
