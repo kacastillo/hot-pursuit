@@ -5,6 +5,8 @@
 #include <bn_sprite_items_cat.h>
 #include <bn_math.h>
 
+
+// Enemy separation distance — if closer than this, push apart
 static constexpr int ENEMY_SEPARATION = 14;
 
 Enemy::Enemy(int starting_x, int starting_y,
@@ -13,8 +15,7 @@ Enemy::Enemy(int starting_x, int starting_y,
     bounding_box(create_bounding_box(enemy_sprite, enemy_size)),
     speed(enemy_speed),
     size(enemy_size)
-{
-}
+{}
 
 /** moves enemy towards the player. if enemy catches player, enemy jumps to random spot */
 void Enemy::update(Player& player)
@@ -45,7 +46,6 @@ void Enemy::separateFrom(Enemy& other)
 {
     bn::fixed dx = enemy_sprite.x() - other.enemy_sprite.x();
     bn::fixed dy = enemy_sprite.y() - other.enemy_sprite.y();
-
     // Compute distance squared to check if enemies are too close
     bn::fixed dist_sq = dx * dx + dy * dy;
     bn::fixed sep = bn::fixed(ENEMY_SEPARATION);
