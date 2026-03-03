@@ -5,7 +5,6 @@
 #include <bn_rect.h>
 #include <bn_size.h>
 #include <bn_fixed.h>
-
 #include "PowerupType.h"
 
 class Player {
