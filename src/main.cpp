@@ -12,12 +12,8 @@
 #include <bn_sprite_ptr.h>
 #include <bn_sprite_text_generator.h>
 #include <bn_random.h>
-#include <bn_math.h>
 
 #include "common_fixed_8x16_font.h"
-#include "bn_sprite_items_cat.h"
-#include "bn_sprite_items_rat.h"
-#include "bn_sprite_items_cheese.h"
 #include "bn_sprite_items_home.h"
 
 // Width and height of the the player bounding box
@@ -33,12 +29,6 @@ static constexpr int MAX_X = bn::display::width() / 2;
 
 static constexpr int ENEMY_SPAWN_INTERVAL = 600;  // 10 seconds
 
-// Enemy separation distance — if closer than this, push apart
-static constexpr int ENEMY_SEPARATION = 14;
-/**
- * The player character, controlled by the user. Can move in 4 directions and collect powerups.
- * Has a bounding box for collision detection and state for active powerups.
- */
 static bn::rect create_bounding_box(bn::sprite_ptr sprite, bn::size box_size) {
     return bn::rect(sprite.x().round_integer(), sprite.y().round_integer(),
                     box_size.width(), box_size.height());
