@@ -320,7 +320,45 @@ bn::random rng;
 int main() {
     bn::core::init();
     ScoreDisplay scoreDisplay = ScoreDisplay();
-    Player player = Player(31, 19, 3.5, PLAYER_SIZE);
+bn::vector<bn::sprite_ptr, MAX_SCORE_CHARS> screen1_sprites;
+
+scoreDisplay.text_generator.set_center_alignment();
+scoreDisplay.text_generator.generate(0, 0, "GET THE CHEESE!", screen1_sprites);
+scoreDisplay.text_generator.generate(0, -64, "PRESS START", screen1_sprites);
+while (bn::keypad::start_held()) {
+    bn::core::update();
+}
+while(!bn::keypad::start_pressed()) {
+    bn::core::update();
+}
+screen1_sprites.clear();
+
+bn::vector<bn::sprite_ptr, MAX_SCORE_CHARS> screen2_sprites;
+scoreDisplay.text_generator.set_center_alignment();
+scoreDisplay.text_generator.generate(0, -16, "USE ARROWS TO MOVE", screen2_sprites);
+scoreDisplay.text_generator.generate(0, -32, "RETURN HOME TO SAFE", screen2_sprites);
+scoreDisplay.text_generator.generate(0, -48, "AVOID THE CATS!", screen2_sprites);
+scoreDisplay.text_generator.generate(0, 0, "PRESS START!!!",screen2_sprites);
+while (bn::keypad::start_held()) {
+    bn::core::update();
+}
+while(!bn::keypad::start_pressed()) {
+    bn::core::update();
+}
+screen2_sprites.clear();
+
+/**
+     * Powerup management
+     *  random number generator for powerup spawn positions and types
+     *  at most 2 active powerups at once
+     */
+    
+    bn::vector<Powerup, 2> powerups; 
+    int powerup_spawn_timer = POWERUP_SPAWN_INTERVAL;
+    bn::random rng; 
+bn::sprite_ptr home_sprite = bn::sprite_items::home.create_sprite(80, 0); 
+
+Player player = Player(80, 0, 3.5, PLAYER_SIZE);
 
     // Create a vector of enemies with different starting positions and speeds.
     // Later enemies are faster than earlier ones.
@@ -331,19 +369,10 @@ int main() {
     int enemy_jump_timer = 360;
     bn::fixed enemy_speed[4] = {bn::fixed(.75), bn::fixed(1.0), bn::fixed(1.5), bn::fixed(1.75)}; // Speeds for each enemy slot
 
-    /**
-     * Powerup management
-     *  random number generator for powerup spawn positions and types
-     *  at most 2 active powerups at once
-     */
-    
-    bn::vector<Powerup, 2> powerups; 
-    int powerup_spawn_timer = POWERUP_SPAWN_INTERVAL;
-    bn::random rng; 
-    bn::sprite_ptr home_sprite = bn::sprite_items::home.create_sprite(80, 0); 
 
     while(true) {
         player.update();
+
 
         bn::rect home_box = create_bounding_box(home_sprite, bn::size(16, 16));
         bool in_home = home_box.intersects(player.bounding_box);
