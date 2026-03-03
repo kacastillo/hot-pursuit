@@ -403,6 +403,12 @@ int main() {
             int px = rng.get_int(MIN_X + 16, MAX_X - 16);
             int py = rng.get_int(MIN_Y + 16, MAX_Y - 16);
 
+
+        
+        
+
+
+    
             // random choose between speed boost and invincibility
             PowerupType type = (rng.get_int(2) == 0) ? PowerupType::SPEED_BOOST : PowerupType::INVINCIBILITY;
             powerups.push_back(Powerup(px, py, type, POWERUP_SIZE));
