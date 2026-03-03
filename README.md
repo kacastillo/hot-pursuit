@@ -5,5 +5,9 @@ Cheese give boost including invisible + faster
 Home is where you feel safe
 
 
-![Gameplay](Get_The_Cheese.gif)
+![Gameplay](get_cheese.gif)
+
+
+
+https://kacastillo.github.io/hot-pursuit/
 A project to explore classes in C++. See instructions [here](./instructions.md)
