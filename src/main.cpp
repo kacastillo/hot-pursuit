@@ -3,7 +3,6 @@
 #include "Enemy.h"
 #include "PowerupType.h"
 #include "ScoreDisplay.h"
-#include "utils.h"
 
 #include <bn_core.h>
 #include <bn_display.h>
@@ -73,16 +72,16 @@ static constexpr int ENEMY_SEPARATION = 14;
  * Score starts a 0 and is increased each time update is called, and reset to 0 when resetScore is
  * called. High score tracks the highest score ever reached.
 */
-class ScoreDisplay {
-    public:
-        ScoreDisplay() :
-            score(0), // Start score at 0
-            high_score(0), // Start high score at 0
-            score_sprites(bn::vector<bn::sprite_ptr, MAX_SCORE_CHARS>()), // Start with empty vector for score sprites
-            text_generator(bn::sprite_text_generator(common::fixed_8x16_sprite_font)) // Use a new text generator
-        {
+// class ScoreDisplay {
+//     public:
+//         ScoreDisplay() :
+//             score(0), // Start score at 0
+//             high_score(0), // Start high score at 0
+//             score_sprites(bn::vector<bn::sprite_ptr, MAX_SCORE_CHARS>()), // Start with empty vector for score sprites
+//             text_generator(bn::sprite_text_generator(common::fixed_8x16_sprite_font)) // Use a new text generator
+//         {
 
-        }
+//         }
 
         /**
          * Increases score by 1 and updates high score if needed. Displays score and high score.
@@ -128,24 +127,24 @@ class ScoreDisplay {
  * Types of powerups available in the game. SPEED_BOOST doubles player speed AND
  *  INVINCIBILITY makes player immune to enemies.
  */
-enum class PowerupType {
-    SPEED_BOOST,
-    INVINCIBILITY
-};
+// enum class PowerupType {
+//     SPEED_BOOST,
+//     INVINCIBILITY
+// };
 
 /**
  * A collectible powerup that temporarily grants the player either a speed boost or invincibility.
  * Spawns at a fixed position and is removed when collected by the player.
  */
-class Powerup {
-public:
-    Powerup(int x, int y, PowerupType type, bn::size powerup_size) :
-        sprite(bn::sprite_items::cheese.create_sprite(x, y)),
-        active(true),
-        powerup_type(type),
-        powerup_size(powerup_size),
-        bounding_box(create_bounding_box(sprite, powerup_size))
-    {}
+// class Powerup {
+// public:
+//     Powerup(int x, int y, PowerupType type, bn::size powerup_size) :
+//         sprite(bn::sprite_items::cheese.create_sprite(x, y)),
+//         active(true),
+//         powerup_type(type),
+//         powerup_size(powerup_size),
+//         bounding_box(create_bounding_box(sprite, powerup_size))
+//     {}
 
     void deactivate() {
         active = false;
@@ -162,18 +161,18 @@ public:
  * The player character, controlled by the user. Can move in 4 directions and collect powerups.
  * Has a bounding box for collision detection and state for active powerups.
  */
-class Player {
-    public:
-        Player(int starting_x, int starting_y, bn::fixed player_speed, bn::size player_size) :
-            sprite(bn::sprite_items::rat.create_sprite(starting_x, starting_y)),
-            base_speed(player_speed),
-            speed(player_speed), 
-            size(player_size),
-            bounding_box(create_bounding_box(sprite, size)),
-            powerup_timer(0),
-            has_powerup(false),
-            is_invincible(false)
-        {}
+// class Player {
+//     public:
+//         Player(int starting_x, int starting_y, bn::fixed player_speed, bn::size player_size) :
+//             sprite(bn::sprite_items::rat.create_sprite(starting_x, starting_y)),
+//             base_speed(player_speed),
+//             speed(player_speed), 
+//             size(player_size),
+//             bounding_box(create_bounding_box(sprite, size)),
+//             powerup_timer(0),
+//             has_powerup(false),
+//             is_invincible(false)
+//         {}
         /**
          * Update the position and bounding box of the player based on d-pad movement.
          * Also prevents the player from moving off the screen.
