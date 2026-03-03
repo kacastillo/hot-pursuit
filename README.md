@@ -3,7 +3,8 @@ a game where user will start from their home and go out eating cheese on the map
 Few thing to remember:
 Cheese give boost including invisible + faster
 Home is where you feel safe
-
+ 
+ Cat and mouse
 
 ![Gameplay](get_cheese.gif)
 
